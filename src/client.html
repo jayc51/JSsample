@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style-client.css" />
+    <title>client</title>
+</head>
+
+<header class="header">
+    <img class="vector" src="./images/Vector.png" alt="verizon logo">
+</header>
+
+
+<body>
+    <h1 class="hello">Hello!</h1>
+    <hr class="line1">
+    <div>
+        <form action="home.html">
+            <!--<form> -->
+            <div class="first-field">
+                <label class="label-text">Select the customer</label>
+                <select id="customerId" onChange="getNBOType(this);">
+                    <option value="0">Select Option</option>
+                    <option value="851">851</option>
+                    <option value="852">852</option>
+                    <option value="853">853</option>
+                </select>
+            </div>
+
+
+            <div class="second-field">
+                <label class="label-text">Select in-cart product</label>
+                <select class>
+                    <option value="0">Select Option</option>
+                    <option value="851">Product_1</option>
+                    <option value="852">Product_2</option>
+                    <option value="853">Product_3</option>
+                </select>
+
+
+            </div>
+
+
+            <div class="third-field">
+
+                <h3>Next Best Offer</h3>
+
+            </div>
+            <div class="forth-field">
+                <table id="myTable" class="dataTable">
+
+                    <tbody id="testBody"></tbody>
+
+                </table>
+            </div>
+
+            <div>
+                <input class="submit" type="submit" value="next">
+            </div>
+            <div>
+                <!--<button class="submit"
+                    onclick="add(document.getElementById('a').value,document.getElementById('b').value)">Submit</button>-->
+                <button class="submit" onclick="home.html">Submit</button>
+
+            </div>
+        </form>
+    </div>
+
+
+    <script>
+
+        //localStorage.setItem("firstname", "Smith");
+
+
+        function getNBOType(value) {
+            console.log("NBO-Type");
+            value = document.getElementById("customerId").value;
+            console.log(value);
+            //let url = "https://onemdm-dev.ebiz.verizon.com/mdm_rest/api/v1/integrations/catalogs/Customer%20Catalog/items/"+value;
+            let url = "https://mdmce.demopersistent.com/mdm_rest/api/v1/integrations/catalogs/Customer%20Catalog/items/" + value;
+
+            //let url = 'https://onemdm-dev.ebiz.verizon.com/mdm_rest/api/v1/integrations/catalogs/'+type+'_Catalog/items/';
+            //let base64 = require('base-64');
+            var type = "Customer%20Catalog";
+            fetch(url, {
+                //mode: 'cors',
+                method: "GET",
+                headers: {
+                    "Content-type": "application/json;charset=UTF-8",
+                    "Authorization": "Basic QWRtaW46dHJpbml0cm9u",
+                    "x-company": "verizon_nbo"
+                    //"Access-Control-Allow-Origin": "*"
+                }
+            })
+
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+
+                    //console.log(data);
+                    //let elem = document.getElementById("testBody");
+                    let elem = document.getElementById("myTable");
+                    console.log("total items= " + elem.rows.length);
+                    for (let i = 0; i < elem.rows.length; i++) {
+                        elem.deleteRow(i);
+                    }
+                    console.log("total remaining items= " + elem.rows.length);
+                    //if (elem.rows.length > 1)
+                    //    elem.deleteRow(0);
+                    for (var i = 0; i < data.entryInfoList.length; i++) {
+                        //console.log(data.entryInfoList[i].primaryKey);
+                        entry_data = data.entryInfoList[i].entryData;
+                        entry_dataStrObj = JSON.parse(JSON.stringify(entry_data).replaceAll("/", "_"))
+                        entry_dataStrObj = JSON.parse(JSON.stringify(entry_dataStrObj).replaceAll(type + "_", ""));
+                        //entry_dataStr = JSON.stringify(entry_dataStrObj).replaceAll(type+"_", "");
+                        //const obj = JSON.parse(JSON.stringify(entry_dataStrObj).replaceAll(type+"_", ""), function (key, value) {
+                        const obj = JSON.parse(JSON.stringify(entry_data), function (key, value) {
+                            if (key.includes("NBO")) {
+                                let table = document.getElementById("testBody");
+                                let row = table.insertRow();
+
+
+                                var desiredText = "";
+                                var data = String(entry_data[key]);
+                                var tokens = data.split('»');
+                                if (tokens.length > 0) {
+
+                                    if (tokens[0].includes("Device")) {
+                                        desiredText += "Device:" + tokens[2];
+                                        localStorage.setItem("device", String(tokens[1]));
+                                    }
+                                    if (tokens[0].includes("Accessory")) {
+                                        desiredText += "Accessory:" + tokens[2];
+                                        localStorage.setItem("accessory", String(tokens[1]));
+                                    }
+                                    if (tokens[0].includes("Plan")) {
+                                        desiredText += "Plan:" + tokens[2];
+                                        localStorage.setItem("plan", String(tokens[1]));
+                                    }
+
+                                }
+
+                                const elem = document.getElementById('myTable');
+                                var desiredLink = "file:///Users/jayantkulkarni/Desktop/Speciality%20Team/CLIENTS/Verizon/VZ-UI/home.html?";
+                                //var desiredText=key + " = " + entry_data[key];
+
+                                //var myHtmlContent = "<li><a href=\"https://www.cnn.com\">$text</a></li>";
+                                var tableRef = document.getElementById('myTable').getElementsByTagName('tbody')[0];
+
+                                tableRef.innerElement += '<a href="' + desiredLink + '">' + desiredText + '</a>';
+
+                                var newRow = tableRef.insertRow(tableRef.rows.length);
+                                //newRow.innerHTML = myHtmlContent;
+                                newRow.innerHTML += '<a href="' + desiredLink + '">' + desiredText + '</a>';
+
+                            }
+                            console.log("total items= " + elem.rows.length);
+                        });
+
+                    }
+
+                })
+        }
+
+
+
+    </script>
+</body>
+
+</html>
